@@ -4,8 +4,9 @@ import requests
 import time
 import datetime
 from googletrans import Translator
-import psycopg2
 from models import News_item
+
+from database import DbManager
 
 
 class Get_news:
@@ -17,15 +18,22 @@ class Get_news:
     def get_all_news(self):
         playua = self.__get_news_playua()
         pcgamer = self.__get_news_pcgamer()
+        #ign = self.__get_news_ign()
+        gamespot = self.__get_news_gamespot()
+        gameinformer = self.__get_news_gameinformer()
         
-
+        #kotaku = self.__get_news_kotaku()
+        unian = self.__get_news_unian()
+        #itc = self.__get_news_itc()
         data = []
         data.extend(playua)
         data.extend(pcgamer)
+        data.extend(gamespot)
+        data.extend(gameinformer)
+        data.extend(unian)
 
-
-        self.__write_to_db(data)
-
+        manager = DbManager()
+        manager.save_news(data)
 
     def __get_news_playua(self)->list:
         html_doc = requests.get("https://playua.net/novyny/")
@@ -44,12 +52,9 @@ class Get_news:
 
             news_ = News_item(title,short,url,preview,cur_time,origin)
             News_list.append(news_)
-            #print(n)
-        #print(News_list[0].title)
         return News_list
 
-        # allNews = soup.findAll('article', class_='short-article')
-        # print(allNews)
+    
 
 
     def __get_news_pcgamer(self)->list:
@@ -62,7 +67,6 @@ class Get_news:
         allNews = soup.find("div",class_="listingResults news")
         
         for article in allNews.find_all("div",class_="listingResult"):
-            ##title = article.find("a", class_='article-link').get("aria-label")
             try:
 
                 title = article.find("a", class_="article-link").get("aria-label")
@@ -83,7 +87,109 @@ class Get_news:
 
         return News_list
 
+    #doesn`t worked. Maybe need to use selenium
+    def __get_news_ign(self):
+        html_doc = requests.get("https://www.ign.com/pc")
+        print(html_doc.text)
+        soup = BeautifulSoup(html_doc.text, "html.parser")
 
+        allNews = soup.find_all("section", class_="content-feed-grid page-content group-0 even")
+        print(all)
+        #print(allNews)
+        # for article in allNews.findAll("div", class_="content-item"):
+        #     title = article.find("a",class_="item-body").get("aria-label")
+        #     short = article.find("div",class_="interface")
+
+        #     print(title +  "  " + short)
+        return []
+    
+    def __get_news_gamespot(self)->list:
+        
+        html_doc = requests.get("https://www.gamespot.com/news/")
+      
+        soup = BeautifulSoup(html_doc.text, "html.parser")
+        News_list = []
+        allNews = soup.find_all("div",class_="card-item base-flexbox flexbox-align-center width-100 border-bottom-grayscale--thin")
+        for article in allNews:
+            title = article.find("h4", class_="card-item__title").text
+            title = self.__translate_text(title)
+            short = "None"
+            url = "https://www.gamespot.com" + article.find("a", class_="card-item__link text-decoration--none").get("href")
+            preview = article.find("img", class_="width-100").get("src")
+            cur_time = time.time()
+            origin = "gamespot"
+            news = News_item(title,short,url,preview,cur_time,origin)
+            News_list.append(news)
+            
+
+        return News_list
+
+    def __get_news_gameinformer(self)->list:
+        html_doc = requests.get("https://www.gameinformer.com/news")
+        soup = BeautifulSoup(html_doc.text, "html.parser")
+        News_list = []
+        
+        allNews = soup.find("div", class_="views-infinite-scroll-content-wrapper clearfix")
+        
+        for article in allNews:
+            try:
+                title = article.find("h2", class_='page-title').find("span").text
+                title = self.__translate_text(title)
+                short = article.find("div", class_='field field--name-field-promo-summary field--type-string field--label-hidden gi5-field-promo-summary gi5-string field__item').text
+                short = self.__translate_text(short)
+                url = "https://www.gameinformer.com" + article.find("div", class_="promo-img-thumb").find("a").get("href")
+                preview = "https://www.gameinformer.com" + article.find("img").get("src")
+                cur_time = time.time()
+                origin = "gameinformer"
+                news = News_item(title,short,url,preview,cur_time,origin)
+                News_list.append(news)
+            except Exception as e:
+                pass
+           
+        return News_list
+
+
+
+    #doesn`t work. can`t parse
+    def __get_news_kotaku(self)->list:
+        html_doc = requests.get("https://kotaku.com/culture/news")
+        soup = BeautifulSoup(html_doc.text, "html.parser")
+        News_list = []
+        
+        allNews = soup.find("div", class_="sc-17uq8ex-0 fakHlO")
+        a = soup.find("div", class_="sc-cw4lnv-13 hHSpAQ")
+        for article in a:
+            title = article.find("div",class_="sc-cw4lnv-5 dYIPCV")
+            print(title)
+        
+        return []
+    
+
+    def __get_news_unian(self)->list:
+        html_doc = requests.get("https://www.unian.ua/games")
+        soup = BeautifulSoup(html_doc.text, "html.parser")
+        News_list = []
+        all_News = soup.find("div", class_="games-news")
+        for article in all_News:
+            title = article.find("a", class_="games-news__title").text
+            short = "None"
+            url = article.find("a", class_="games-news__title").get("href")
+            preview = article.find("a", class_="games-news__image").find("img").get("data-src")
+            cur_time = time.time()
+            origin = "unian"
+            news = News_item(title,short,url,preview,cur_time,origin)
+            News_list.append(news)
+            
+        return News_list
+    
+    def __get_news_itc(self)->list:
+        html_doc = requests.get("https://www.unian.ua/games")
+        soup = BeautifulSoup(html_doc.text, "html.parser")
+        News_list = []
+        all_News = soup.findAll('h2')
+        print(all_News)
+        
+        return []
 
 
     def __translate_text(self,text:str):
@@ -92,41 +198,4 @@ class Get_news:
         return result.text    
     
 
-    def __write_to_db(self, data:list):
-        schema = "allnews"
-
-
-        conn = psycopg2.connect(
-        host="localhost",
-        database="news",
-        user="postgres",
-        password="12345678",
-        options=f"-c search_path={schema}"
-    )
-
-        # Create a cursor object
-        cur = conn.cursor()
-
-        # Execute a query
-        cur.execute("SELECT * FROM news")
-
-        # Fetch the query results
-        rows = cur.fetchall()
-
-        # Print the results
-        #print(rows)
-
-        todb = []
-        for news in data:
-            context = (news.title,news.short, news.origin,news.url,news.preview,news.time)
-            todb.append(context)
-
-        sql = "INSERT INTO news (title, short, origin, url, preview, time) VALUES (%s, %s, %s, %s, %s, %s)"
-        cur.executemany(sql, todb)
-
-        # Commit the changes to the database
-        conn.commit()
-
-        # Close the cursor and connection
-        cur.close()
-        conn.close()
+    
