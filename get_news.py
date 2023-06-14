@@ -7,7 +7,7 @@ from googletrans import Translator
 from models import News_item
 
 from database import DbManager
-
+from get_film_news import Get_Film_News
 
 class Get_news:
     def __init__(self) -> None:
@@ -34,6 +34,8 @@ class Get_news:
 
         manager = DbManager()
         manager.save_news(data)
+        # films = Get_Film_News()
+        # films.get()
 
     def __get_news_playua(self)->list:
         html_doc = requests.get("https://playua.net/novyny/")
@@ -193,9 +195,12 @@ class Get_news:
 
 
     def __translate_text(self,text:str):
-        translator = Translator(service_urls=['translate.google.com'])
-        result = translator.translate(text, dest='uk')
-        return result.text    
+        try:
+            translator = Translator(service_urls=['translate.google.com'])
+            result = translator.translate(text, dest='uk')
+            return result.text 
+        except: 
+            return text
     
 
     

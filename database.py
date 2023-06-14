@@ -21,17 +21,19 @@ class DbManager:
         cur = conn.cursor()
 
        
-
+        count = 0
         for news in data:
-            sql = f"SELECT url FROM news WHERE url = '{news.url}'"
+            sql = f"SELECT url FROM games_news WHERE url = '{news.url}'"
             cur.execute(sql)
             rows = cur.fetchall()
         
             if rows==[]:
-                sql = "INSERT INTO news (title, short, origin, url, preview, time) VALUES (%s, %s, %s, %s, %s, %s)"
+                sql = "INSERT INTO games_news (title, short, origin, url, preview, time) VALUES (%s, %s, %s, %s, %s, %s)"
                 context = (news.title,news.short, news.origin,news.url,news.preview,news.time)
                 cur.execute(sql, context)
 
+                count+=1
+        print(f"{count} records added to database")
         # Commit the changes to the database
         conn.commit()
 
