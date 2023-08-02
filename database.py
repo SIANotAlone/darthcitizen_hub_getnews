@@ -5,7 +5,7 @@ class DbManager:
     def __init__(self) -> None:
         pass
 
-    def save_news(self, data:list):
+    def save_news(self, data:list, origin = "origin"):
         SCHEMA = "allnews"
 
 
@@ -33,7 +33,10 @@ class DbManager:
                 cur.execute(sql, context)
 
                 count+=1
-        print(f"{count} records added to database")
+        if origin == "origin":
+            print(f"[INFO] {count} records added to database")
+        else: 
+            print(f"[INFO] {count} records added to database from {origin}")
         # Commit the changes to the database
         conn.commit()
 
