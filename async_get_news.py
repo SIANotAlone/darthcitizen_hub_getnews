@@ -19,6 +19,74 @@ async def translate_text(text:str):
     
 
 
+async def ign(data,site):
+    html = BeautifulSoup(data, 'html.parser')
+    news = html.find_all('a', class_='item-body')
+    News_list = []
+    for item in news:
+        
+        title = item.get('aria-label')
+        short = 'None'
+        preview = item.find('div').find('img').get('src')
+        url = 'https://www.ign.com' + item.get('href')
+        origin = 'IGN'
+        now = time.time()
+        if title != None:
+            news_ = News_item(title,short,url,preview,now,origin)
+            News_list.append(news_)
+    manager = DbManager()
+    manager.save_news(News_list, origin=site)
+
+async def kotaku(data, site):
+    html = BeautifulSoup(data, 'html.parser')
+    news = html.find_all('article')
+
+    News_list = []
+    for item in news:
+        title = item.find('h2').text
+        short = item.find('p').text
+        urls = item.find_all('a')
+        origin = 'KOTAKU'
+        now = time.time()
+        preview = ''
+        try:
+            preview = item.find('img').get('data-src')
+        except:
+            pass
+        url = ''
+        i=0
+
+        for val in urls:
+            try:
+                val.get('href')
+                i+=1
+                if i==3:
+                    url = val.get('href')
+                # print(url)
+            except:
+                pass
+        news_ = News_item(title,short,url,preview,now,origin)
+        News_list.append(news_)
+    manager = DbManager()
+    manager.save_news(News_list, origin=site)
+
+
+async def engadget(data,site):
+    html = BeautifulSoup(data, 'html.parser')
+    news = html.find_all('article')
+    News_list = []
+    for item in news:
+        title = item.find('h2').text
+        url = 'https://www.engadget.com'+ item.find('h2').find('a').get('href')
+        preview = item.find('img').get('src')
+        short = item.find('div', class_='D(f) Fld(c) Ai(fs)').find('div').text
+        origin = 'engadget'
+        now = time.time()
+        news_ = News_item(title,short,url,preview,now,origin)
+        News_list.append(news_)
+    manager = DbManager()
+    manager.save_news(News_list, origin=site)
+
 async def gagadget(data,site):
     
     html = BeautifulSoup(data, 'html.parser')
@@ -295,7 +363,6 @@ async def get_data(context):
         await gameinformer(context["data"],site = context['site'])
     elif context['site'] == 'unian':
         await unian(context["data"],site = context['site'])
-
     elif context['site'] == 'gagadget':
         await gagadget(context["data"],site = context['site'])
     elif context['site'] == '24tv':
@@ -310,6 +377,13 @@ async def get_data(context):
         await gameua(context["data"],site = context['site'])
     elif context['site'] == 'root-nation':
         await root_nation(context["data"],site = context['site'])
+    
+    elif context['site'] == 'ign':
+        await ign(context["data"],site = context['site'])
+    elif context['site'] == 'kotaku':
+        await kotaku(context["data"],site = context['site'])
+    elif context['site'] == 'engadget':
+        await engadget(context["data"],site = context['site'])
     
         
     
@@ -329,7 +403,10 @@ async def main():
              {"site":"uaplay","url":"https://uaplay.com.ua/best/"},
              {"site":"ITC","url":"https://itc.ua/ua/tag/igri-ua/"},
              {"site":"gameua","url":"https://gameua.com.ua/news/"},
-             {"site":"root-nation","url":"https://root-nation.com/ua/games-ua/"}
+             {"site":"root-nation","url":"https://root-nation.com/ua/games-ua/"},
+             {"site":"ign","url":"https://www.ign.com/?filter=games"},
+             {"site":"kotaku","url":"https://kotaku.com/culture/news"},
+             {"site":"engadget","url":"https://www.engadget.com/gaming/"}
             ]
         user_agent = {'User-agent': 'Mozilla/5.0'}
         for task in tasks:
