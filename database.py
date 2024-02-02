@@ -17,7 +17,7 @@ class DbManager:
         options=f"-c search_path={SCHEMA}"
     )
 
-     
+        data.reverse()
         cur = conn.cursor()
 
        
@@ -26,7 +26,21 @@ class DbManager:
             sql = f"SELECT url FROM games_news WHERE url = '{news.url}'"
             cur.execute(sql)
             rows = cur.fetchall()
-        
+            # if origin=='ITC':
+            #
+            #     sql = f"SELECT title FROM games_news WHERE origin = 'ITC'"
+            #     cur.execute(sql)
+            #     rows_itc = cur.fetchall()
+            #     # print(rows_itc)
+            #     if news.title in rows_itc:
+            #         pass
+            #     else:
+            #         sql = "INSERT INTO games_news (title, short, origin, url, preview, time) VALUES (%s, %s, %s, %s, %s, %s)"
+            #         context = (news.title, news.short, news.origin, news.url, news.preview, news.time)
+            #         cur.execute(sql, context)
+            #
+            #         count += 1
+
             if rows==[]:
                 sql = "INSERT INTO games_news (title, short, origin, url, preview, time) VALUES (%s, %s, %s, %s, %s, %s)"
                 context = (news.title,news.short, news.origin,news.url,news.preview,news.time)

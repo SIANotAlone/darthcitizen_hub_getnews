@@ -43,8 +43,15 @@ async def kotaku(data, site):
 
     News_list = []
     for item in news:
-        title = item.find('h2').text
-        short = item.find('p').text
+        title = item.find('h2')
+        try:
+            title = item.find('h2').get_text(strip=True)
+        except Exception as e:
+            continue
+        try:
+            short = item.find('p').text
+        except Exception as e:
+            continue
         urls = item.find_all('a')
         origin = 'KOTAKU'
         now = time.time()
@@ -54,13 +61,13 @@ async def kotaku(data, site):
         except:
             pass
         url = ''
-        i=0
+        i = 0
 
         for val in urls:
             try:
                 val.get('href')
-                i+=1
-                if i==3:
+                i += 1
+                if i == 3:
                     url = val.get('href')
                 # print(url)
             except:
@@ -70,6 +77,21 @@ async def kotaku(data, site):
     manager = DbManager()
     manager.save_news(News_list, origin=site)
 
+async def nv(data, site):
+    html = BeautifulSoup(data, 'html.parser')
+    news = html.find_all('div', class_='row-result')
+    News_list = []
+    for item in news:
+        title = item.find('div', class_='title').text.strip()
+        short = item.find('div', class_='subtitle').text.strip()
+        url = item.find('a').get('href')
+        preview = 'https://static.nv.ua/images/main/nv_logo_new.svg?q=85&f=png&stamp=4.166'
+        origin = 'New Voice(NV)'
+        now = time.time()
+        news_ = News_item(title, short, url, preview, now, origin)
+        News_list.append(news_)
+    manager = DbManager()
+    manager.save_news(News_list, origin=site)
 
 async def engadget(data,site):
     html = BeautifulSoup(data, 'html.parser')
@@ -190,7 +212,8 @@ async def itc(data,site):
         i+=1
         if i>50:
             break
-
+    # print(site)
+    # print(News_list)
     manager = DbManager()
     manager.save_news(News_list, origin=site)
 
@@ -217,7 +240,6 @@ async def gameua(data,site):
         #only 9 news on the page
         if i>8:
             break
-
     manager = DbManager()
     manager.save_news(News_list, origin=site)
 
@@ -384,6 +406,8 @@ async def get_data(context):
         await kotaku(context["data"],site = context['site'])
     elif context['site'] == 'engadget':
         await engadget(context["data"],site = context['site'])
+    elif context['site'] == 'New Voice(NV)':
+        await nv(context["data"],site = context['site'])
     
         
     
@@ -400,13 +424,14 @@ async def main():
              {"site":"gagadget","url":"https://gagadget.com/uk/news/games/"},
              {"site":"24tv","url":"https://games.24tv.ua/"},
              {"site":"geek.news","url":"https://geeks.news/igrovi-novyny/"},
-             {"site":"uaplay","url":"https://uaplay.com.ua/best/"},
-             {"site":"ITC","url":"https://itc.ua/ua/tag/igri-ua/"},
+             {"site":"uaplay","url":"https://uaplay.com.ua/"},
+             {"site":"ITC","url":"https://itc.ua/ua/igri/"},
              {"site":"gameua","url":"https://gameua.com.ua/news/"},
              {"site":"root-nation","url":"https://root-nation.com/ua/games-ua/"},
              {"site":"ign","url":"https://www.ign.com/?filter=games"},
              {"site":"kotaku","url":"https://kotaku.com/culture/news"},
-             {"site":"engadget","url":"https://www.engadget.com/gaming/"}
+             {"site":"engadget","url":"https://www.engadget.com/gaming/"},
+             {"site": "New Voice(NV)", "url": "https://nv.ua/ukr/tags/videoihry.html"}
             ]
         user_agent = {'User-agent': 'Mozilla/5.0'}
         for task in tasks:
@@ -417,8 +442,12 @@ async def main():
 
                 html = await response.text()
                 #print("Body:", html)
-                await get_data(context = {"site":task["site"], "data": html})
 
+                try:
+                    await get_data(context = {"site":task["site"], "data": html})
+                except:
+                    site = task["site"]
+                    print(f"[WARN] Some thing wrong with {site}.")
         end=time.time()
         time_for_scrapping = end - start
         time_spent = '%.2f' % time_for_scrapping
