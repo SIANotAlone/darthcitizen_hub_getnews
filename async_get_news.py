@@ -140,7 +140,7 @@ async def tv24(data,site):
         i+=1
         title  = item.find('div', class_='news-title').find('a').text
         short = 'None'
-        preview = 'https://climate.onep.go.th/wp-content/uploads/2020/01/default-image.jpg'
+        preview = 'https://upload.wikimedia.org/wikipedia/commons/0/04/24_Kanal_logo.svg'
         origin = "24tv.ua"
         url = item.find('div', class_='news-title').find('a').get('href')
         now = time.time()
@@ -252,8 +252,7 @@ async def root_nation(data,site):
         title = item.find('p', class_='entry-title td-module-title').find('a').text
         short = item.find('div', class_='td-excerpt').text
         url = item.find('p', class_='entry-title td-module-title').find('a').get('href')
-        preview = item.find('a', class_='td-image-wrap').find('span').get('style')
-        preview = preview[22:len(preview)-1]
+        preview = 'https://scontent-ber1-1.xx.fbcdn.net/v/t39.30808-6/292362166_466285642167673_7257513906856056447_n.jpg?_nc_cat=100&ccb=1-7&_nc_sid=efb6e6&_nc_ohc=_o0VtS6--o0AX_iGVcD&_nc_ht=scontent-ber1-1.xx&oh=00_AfAF9lyZFO_BjHemEVPnpqsnrNE7v66rApU1ppTBfAU9jg&oe=65CBDB31'
         origin = 'root-nation.com'
         now = time.time()
 
@@ -370,7 +369,6 @@ async def unian(data, site):
         origin = "unian"
         news = News_item(title,short,url,preview,cur_time,origin)
         News_list.append(news)
-    #print('unian: '+str(News_list))
     manager = DbManager()
     manager.save_news(News_list, origin=site)
 
@@ -399,7 +397,6 @@ async def get_data(context):
         await gameua(context["data"],site = context['site'])
     elif context['site'] == 'root-nation':
         await root_nation(context["data"],site = context['site'])
-    
     elif context['site'] == 'ign':
         await ign(context["data"],site = context['site'])
     elif context['site'] == 'kotaku':
@@ -436,13 +433,7 @@ async def main():
         user_agent = {'User-agent': 'Mozilla/5.0'}
         for task in tasks:
             async with session.get(task['url'], headers=user_agent) as response:
-
-                #print("Status:", response.status)
-                #print("Content-type:", response.headers['content-type'])
-
                 html = await response.text()
-                #print("Body:", html)
-
                 try:
                     await get_data(context = {"site":task["site"], "data": html})
                 except:
@@ -451,7 +442,7 @@ async def main():
         end=time.time()
         time_for_scrapping = end - start
         time_spent = '%.2f' % time_for_scrapping
-        print(f"[INFO] News was scrapted, time: {time_spent} seconds")
+        print(f"[INFO] News was scraped, time: {time_spent} seconds")
 
 # Python 3.7+
 asyncio.run(main())
