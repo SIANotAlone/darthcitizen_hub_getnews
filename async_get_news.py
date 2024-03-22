@@ -109,6 +109,29 @@ async def engadget(data,site):
     manager = DbManager()
     manager.save_news(News_list, origin=site)
 
+async def stopgame(data, site):
+    html = BeautifulSoup(data, 'html.parser')
+    news = html.find('div', id='w0').find('div').find_all('div', class_='_card_1vlem_1')
+    News_list = []
+    for item in news:
+        title = item.find('a', class_='_title_1vlem_60').text
+        short = ''
+        origin = 'Stopgame'
+        url = 'https://stopgame.ru' + item.find('a', class_='_title_1vlem_60').get('href')
+        preview = item.find('picture').find('img').get('src')
+        tags = item.find('div', class_='_tags_1vlem_100').find_all('a')
+        for index, tag in enumerate(tags):
+            if index + 1 < len(tags):
+                short += tag.text + ', '
+            else:
+                short += tag.text + '.'
+        now = time.time()
+        news_ = News_item(title,short,url,preview,now,origin)
+        News_list.append(news_)
+    manager = DbManager()
+    manager.save_news(News_list, origin=site)
+
+
 async def gagadget(data,site):
     
     html = BeautifulSoup(data, 'html.parser')
@@ -129,6 +152,22 @@ async def gagadget(data,site):
     manager.save_news(News_list, origin=site)
 
 
+async def gameverse(data, site):
+    html = BeautifulSoup(data, 'html.parser')
+    news = html.find_all('a', class_='post')
+    News_list = []
+    for item in news:
+        title = item.find('p', class_='title').text
+        short = item.find('p', class_='description').text
+        origin = 'Gameverse'
+        url = 'https://gameverse.com.ua' + item.get('href')
+        preview = 'https://gameverse.com.ua' + item.find('img').get('src')
+        now = time.time()
+
+        news_ = News_item(title, short, url, preview, now, origin)
+        News_list.append(news_)
+    manager = DbManager()
+    manager.save_news(News_list, origin=site)
 
 
 async def tv24(data,site):
@@ -252,7 +291,7 @@ async def root_nation(data,site):
         title = item.find('p', class_='entry-title td-module-title').find('a').text
         short = item.find('div', class_='td-excerpt').text
         url = item.find('p', class_='entry-title td-module-title').find('a').get('href')
-        preview = 'https://scontent-ber1-1.xx.fbcdn.net/v/t39.30808-6/292362166_466285642167673_7257513906856056447_n.jpg?_nc_cat=100&ccb=1-7&_nc_sid=efb6e6&_nc_ohc=_o0VtS6--o0AX_iGVcD&_nc_ht=scontent-ber1-1.xx&oh=00_AfAF9lyZFO_BjHemEVPnpqsnrNE7v66rApU1ppTBfAU9jg&oe=65CBDB31'
+        preview = 'https://root-nation.com/wp-content/uploads/2022/05/rn-material-logo-web-180p-02.png'
         origin = 'root-nation.com'
         now = time.time()
 
@@ -405,7 +444,10 @@ async def get_data(context):
         await engadget(context["data"],site = context['site'])
     elif context['site'] == 'New Voice(NV)':
         await nv(context["data"],site = context['site'])
-    
+    elif context['site'] == 'Gameverse':
+        await gameverse(context["data"],site = context['site'])
+    elif context['site'] == 'Stopgame':
+        await stopgame(context["data"],site = context['site'])
         
     
 
@@ -428,7 +470,9 @@ async def main():
              {"site":"ign","url":"https://www.ign.com/?filter=games"},
              {"site":"kotaku","url":"https://kotaku.com/culture/news"},
              {"site":"engadget","url":"https://www.engadget.com/gaming/"},
-             {"site": "New Voice(NV)", "url": "https://nv.ua/ukr/tags/videoihry.html"}
+             {"site": "New Voice(NV)", "url": "https://nv.ua/ukr/tags/videoihry.html"},
+             {"site": "Gameverse", "url": "https://gameverse.com.ua/news/"},
+            {"site": "Stopgame", "url": "https://stopgame.ru/news"}
             ]
         user_agent = {'User-agent': 'Mozilla/5.0'}
         for task in tasks:
