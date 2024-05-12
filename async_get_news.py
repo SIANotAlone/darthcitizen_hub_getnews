@@ -7,7 +7,10 @@ from bs4 import BeautifulSoup
 import time
 
 
+# from database import DbManager
 from database import DbManager
+
+
 
 async def translate_text(text:str):
     try:
@@ -108,6 +111,7 @@ async def engadget(data,site):
         News_list.append(news_)
     manager = DbManager()
     manager.save_news(News_list, origin=site)
+
 
 async def stopgame(data, site):
     html = BeautifulSoup(data, 'html.parser')
