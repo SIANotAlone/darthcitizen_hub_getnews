@@ -194,7 +194,21 @@ async def tv24(data,site):
     manager = DbManager()
     manager.save_news(News_list, origin=site)
 
-
+async def eurogamer(data,site):
+    html = BeautifulSoup(data, 'html.parser')
+    news = html.find('div', class_='archive__items').find_all('article', class_='archive__item')
+    News_list = []
+    for item in news:
+        title = item.find('a', class_='link link--expand').text.strip()
+        short = item.find('div', class_='archive__strapline').text.strip()
+        origin = 'EUROGAMER'
+        url = item.find('a', class_='link link--expand').get('href')
+        preview = item.find('div', class_='archive__thumbnail').find('img', 'thumbnail_image').get('src')
+        now = time.time()
+        news_ = News_item(title, short, url, preview, now, origin)
+        News_list.append(news_)
+    manager = DbManager()
+    manager.save_news(News_list, origin=site)
 
 async def geeknews(data,site):
     html = BeautifulSoup(data, 'html.parser')
@@ -452,6 +466,8 @@ async def get_data(context):
         await gameverse(context["data"],site = context['site'])
     elif context['site'] == 'Stopgame':
         await stopgame(context["data"],site = context['site'])
+    elif context['site'] == 'EUROGAMER':
+        await eurogamer(context["data"],site = context['site'])
         
     
 
@@ -476,7 +492,8 @@ async def main():
              {"site":"engadget","url":"https://www.engadget.com/gaming/"},
              {"site": "New Voice(NV)", "url": "https://nv.ua/ukr/tags/videoihry.html"},
              {"site": "Gameverse", "url": "https://gameverse.com.ua/news/"},
-            {"site": "Stopgame", "url": "https://stopgame.ru/news"}
+            {"site": "Stopgame", "url": "https://stopgame.ru/news"},
+            {"site": "EUROGAMER", "url": "https://www.eurogamer.net/news"}
             ]
         user_agent = {'User-agent': 'Mozilla/5.0'}
         for task in tasks:
